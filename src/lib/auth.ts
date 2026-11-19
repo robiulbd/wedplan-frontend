@@ -46,6 +46,12 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     maxPasswordLength: 128,
   },
+  // Google OAuth provider — credentials are read from env:
+  //   GOOGLE_CLIENT_ID  and  GOOGLE_CLIENT_SECRET (already in backend .env)
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  },
   user: {
     additionalFields: {
       // Owned by the Express backend (POST /api/auth/jwt sets it), never by the

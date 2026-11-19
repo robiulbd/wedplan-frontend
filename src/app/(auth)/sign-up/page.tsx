@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { signUp, signIn } from "@/lib/auth-client";
 import { uploadImageToImgBB } from "@/lib/uploadImage";
@@ -40,6 +41,7 @@ export default function SignUpPage() {
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [role, setRole] = useState<SignupRole>("customer");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -178,15 +180,29 @@ export default function SignUpPage() {
             >
               Password
             </label>
-            <input
-              id="sign-up-password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
-            />
+            <div className="relative">
+              <input
+                id="sign-up-password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center justify-center w-11 text-gray-500 hover:text-gray-700 transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div>
