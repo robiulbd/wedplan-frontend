@@ -51,6 +51,20 @@ export interface AuthUser {
   subscriptionPlan?: "free" | "premium";
 }
 
+export interface Booking {
+  _id: string;
+  serviceId: string;
+  vendorId: string;
+  customerId: string;
+  customerName?: string;
+  eventDate: string;
+  eventLocation?: string;
+  message?: string;
+  status: BookingStatus;
+  service?: ServiceItem | null;
+  createdAt?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;

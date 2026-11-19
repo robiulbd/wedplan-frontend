@@ -1,17 +1,69 @@
 "use client";
 
-import { CalendarCheck, Heart, Search, Sparkles } from "lucide-react";
+import { Briefcase, CalendarCheck, CheckCircle2, Clock, Heart, Search, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { apiRequest } from "@/lib/apiClient";
 import AdminServices from "@/components/dashboard/AdminServices";
+import CustomerBookings from "@/components/dashboard/CustomerBookings";
+import VendorBookings from "@/components/dashboard/VendorBookings";
 import VendorServices from "@/components/dashboard/VendorServices";
 import { useSession } from "@/lib/auth-client";
+import type { ServiceItem, ServicesListResponse } from "@/types";
+
+interface VendorStats {
+  totalServices: number;
+  activeServices: number;
+  pendingBookings: number;
+  acceptedBookings: number;
+}
 
 export default function DashboardOverview() {
   const params = useParams<{ role: string }>();
   const role = Array.isArray(params?.role) ? params.role[0] : params?.role;
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(" ")[0] || "there";
+  const [vendorStats, setVendorStats] = useState<VendorStats | null>(null);
+
+  useEffect(() => {
+    if (role !== "vendor") return;
+    let isMounted = true;
+
+    async function loadStats() {
+      try {
+        const [servicesRes, bookingsRes] = await Promise.all([
+          apiRequest<ServicesListResponse>("/services/vendor/my-services"),
+          apiRequest<{ success: boolean; data: { status: string }[] }>(
+            "/bookings/vendor/mine",
+          ),
+        ]);
+        const services: ServiceItem[] = Array.isArray(servicesRes.data)
+          ? servicesRes.data
+          : [];
+        const bookings: { status: string }[] = Array.isArray(bookingsRes.data)
+          ? bookingsRes.data
+          : [];
+
+        if (!isMounted) return;
+        setVendorStats({
+          totalServices: services.length,
+          activeServices: services.filter(
+            (s) => s.isActive && s.status === "approved",
+          ).length,
+          pendingBookings: bookings.filter((b) => b.status === "pending").length,
+          acceptedBookings: bookings.filter((b) => b.status === "accepted").length,
+        });
+      } catch {
+        if (isMounted) setVendorStats(null);
+      }
+    }
+
+    loadStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [role]);
 
   if (role === "vendor") {
     return (
@@ -24,7 +76,58 @@ export default function DashboardOverview() {
             Manage your wedding services and keep your listings up to date.
           </p>
         </header>
+
+        {vendorStats ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="rounded-2xl border border-rose-100 bg-white p-5">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-rose-600" />
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Total Services
+                </h2>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-gray-900">
+                {vendorStats.totalServices}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-100 bg-white p-5">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Active Services
+                </h2>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-gray-900">
+                {vendorStats.activeServices}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-100 bg-white p-5">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-600" />
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Pending Booking Requests
+                </h2>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-gray-900">
+                {vendorStats.pendingBookings}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-100 bg-white p-5">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-rose-600" />
+                <h2 className="text-sm font-semibold text-gray-900">
+                  Accepted Bookings
+                </h2>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-gray-900">
+                {vendorStats.acceptedBookings}
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         <VendorServices />
+        <VendorBookings />
       </div>
     );
   }
@@ -39,6 +142,20 @@ export default function DashboardOverview() {
           </p>
         </header>
         <AdminServices />
+      </div>
+    );
+  }
+
+  if (role === "customer") {
+    return (
+      <div className="space-y-6">
+        <header className="rounded-2xl border border-rose-100 bg-white p-6">
+          <h1 className="text-2xl font-bold text-gray-900">Customer overview</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Track your wedding bookings and manage your plans.
+          </p>
+        </header>
+        <CustomerBookings />
       </div>
     );
   }

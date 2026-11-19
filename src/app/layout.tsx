@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import Footer from "@/components/shared/Footer";
 import Navbar from "@/components/shared/Navbar";
 import "./globals.css";
 
@@ -19,6 +20,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Navbar />
         {children}
+        <Footer />
         <Toaster richColors position="top-right" />
       </body>
     </html>

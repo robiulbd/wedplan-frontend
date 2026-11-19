@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 import { MapPin, Sparkles, UserCheck } from "lucide-react";
 import { ServiceItem } from "@/types";
 
@@ -11,10 +12,17 @@ interface ServiceCardProps {
 
 export default function ServiceCard({ service }: ServiceCardProps) {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
 
-  // GET /api/services/:id is a public endpoint, so browsing details does not
-  // require an account (only booking would).
+  // Unauthenticated users are sent to Sign In before they can view details
+  // (only customers may book, and booking requires an account).
   const handleViewDetails = () => {
+    if (!isPending && !session?.user) {
+      router.push(
+        `/sign-in?redirect=${encodeURIComponent(`/services/${service._id}`)}`,
+      );
+      return;
+    }
     router.push(`/services/${service._id}`);
   };
 

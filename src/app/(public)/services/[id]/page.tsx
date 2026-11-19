@@ -2,6 +2,7 @@
 
 import {
   ArrowLeft,
+  CalendarCheck,
   Loader2,
   Mail,
   MapPin,
@@ -11,17 +12,24 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { apiRequest } from "@/lib/apiClient";
+import { useSession } from "@/lib/auth-client";
 import type { ServiceItem, SingleServiceResponse } from "@/types";
 
 function ServiceDetailsContent() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const { data: session } = useSession();
 
   const [service, setService] = useState<ServiceItem | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<number>(0);
+  const [eventDate, setEventDate] = useState<string>("");
+  const [eventLocation, setEventLocation] = useState<string>("");
+  const [bookingMessage, setBookingMessage] = useState<string>("");
+  const [submittingBooking, setSubmittingBooking] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id) return;
@@ -55,6 +63,32 @@ function ServiceDetailsContent() {
       isMounted = false;
     };
   }, [id]);
+
+  const handleSubmitBooking = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!service) return;
+
+    setSubmittingBooking(true);
+    try {
+      await apiRequest("/bookings", {
+        method: "POST",
+        body: JSON.stringify({
+          serviceId: service._id,
+          eventDate,
+          eventLocation,
+          message: bookingMessage,
+        }),
+      });
+      toast.success("Booking request sent to the vendor");
+      setEventDate("");
+      setEventLocation("");
+      setBookingMessage("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit booking");
+    } finally {
+      setSubmittingBooking(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -93,6 +127,12 @@ function ServiceDetailsContent() {
       ? service.images
       : ["/images/hero-wedding.jpg"];
   const cover = images[Math.min(activeImage, images.length - 1)];
+
+  const isCustomerBookingCandidate =
+    !!session?.user &&
+    !!service &&
+    (session.user as { role?: string }).role === "customer" &&
+    session.user.id !== service.vendorId;
 
   return (
     <main className="min-h-screen bg-rose-50/20 py-10 px-4">
@@ -175,6 +215,78 @@ function ServiceDetailsContent() {
                   <span>{service.vendorName || "Verified WedPlan Vendor"}</span>
                 </div>
               </dl>
+
+              {isCustomerBookingCandidate ? (
+                <form
+                  onSubmit={handleSubmitBooking}
+                  className="mt-6 space-y-3 rounded-xl border border-rose-100 bg-rose-50/40 p-4"
+                >
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <CalendarCheck className="w-4 h-4 text-rose-600" />
+                    Request Booking
+                  </h2>
+
+                  <div>
+                    <label
+                      htmlFor="booking-event-date"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Event date
+                    </label>
+                    <input
+                      id="booking-event-date"
+                      type="date"
+                      required
+                      value={eventDate}
+                      onChange={(e) => setEventDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="booking-event-location"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Event location
+                    </label>
+                    <input
+                      id="booking-event-location"
+                      type="text"
+                      required
+                      value={eventLocation}
+                      onChange={(e) => setEventLocation(e.target.value)}
+                      placeholder="Where is the event?"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="booking-message"
+                      className="mb-1 block text-sm font-medium text-gray-700"
+                    >
+                      Additional message
+                    </label>
+                    <textarea
+                      id="booking-message"
+                      rows={3}
+                      value={bookingMessage}
+                      onChange={(e) => setBookingMessage(e.target.value)}
+                      placeholder="Anything the vendor should know about your event..."
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingBooking}
+                    className="w-full py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm font-medium transition cursor-pointer"
+                  >
+                    {submittingBooking ? "Sending..." : "Send booking request"}
+                  </button>
+                </form>
+              ) : null}
 
               {service.vendorEmail ? (
                 <a

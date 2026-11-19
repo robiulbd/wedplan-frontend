@@ -23,8 +23,8 @@ interface JwtEndpointResponse {
 }
 
 function validatePassword(password: string): string | null {
-  if (password.length < 8) {
-    return "Password must be at least 8 characters long";
+  if (password.length < 6) {
+    return "Password must be at least 6 characters long";
   }
   if (!/[A-Z]/.test(password)) {
     return "Password must contain at least one uppercase letter";
@@ -184,7 +184,7 @@ export default function SignUpPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 8 chars, 1 uppercase, 1 lowercase"
+              placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
