@@ -7,11 +7,24 @@ import { toast } from "sonner";
 import { signUp, signIn } from "@/lib/auth-client";
 import { uploadImageToImgBB } from "@/lib/uploadImage";
 import { getDashboardPathByRole } from "@/utils/roleRedirect";
-import { SignupRole } from "@/types";
+import { SignupRole, UserRole } from "@/types";
+
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+).replace(/\/+$/, "");
+
+interface JwtEndpointResponse {
+  success: boolean;
+  token?: string;
+  message?: string;
+  user?: {
+    role?: UserRole;
+  };
+}
 
 function validatePassword(password: string): string | null {
-  if (password.length < 6) {
-    return "Password must be at least 6 characters long";
+  if (password.length < 8) {
+    return "Password must be at least 8 characters long";
   }
   if (!/[A-Z]/.test(password)) {
     return "Password must contain at least one uppercase letter";
@@ -24,12 +37,12 @@ function validatePassword(password: string): string | null {
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [role, setRole] = useState<SignupRole>("customer");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -47,9 +60,11 @@ export default function SignUpPage() {
         uploadedImageUrl = await uploadImageToImgBB(imageFile);
       }
 
+      const normalizedEmail = email.trim().toLowerCase();
+
       const { data, error } = await signUp.email({
         name: name.trim(),
-        email: email.trim(),
+        email: normalizedEmail,
         password,
         image: uploadedImageUrl || undefined,
       });
@@ -58,25 +73,32 @@ export default function SignUpPage() {
         throw new Error(error?.message || "Registration failed");
       }
 
-      // ব্যাকএন্ড থেকে JWT টোকেন নেওয়া এবং রোল অনুযায়ী রিডাইরেক্ট
-      const tokenRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/auth/jwt`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim() }),
-        }
-      );
+      // ব্যাকএন্ডে রোল সিঙ্ক ও JWT টোকেন সংগ্রহ
+      const tokenRes = await fetch(`${API_BASE_URL}/auth/jwt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: normalizedEmail,
+          role,
+        }),
+      });
 
-      if (tokenRes.ok) {
-        const tokenData = await tokenRes.json();
-        if (tokenData.token) {
-          localStorage.setItem("wedplan_jwt", tokenData.token);
-        }
+      const tokenData = (await tokenRes.json()) as JwtEndpointResponse;
+
+      if (!tokenRes.ok || !tokenData.success || !tokenData.token) {
+        throw new Error(
+          tokenData.message ||
+            "Your account was created, but the session token could not be initialized. Please sign in."
+        );
       }
 
+      localStorage.setItem("wedplan_jwt", tokenData.token);
+
+      const finalRole: UserRole = tokenData.user?.role || role;
+
       toast.success("Account created successfully!");
-      router.push(getDashboardPathByRole(role));
+      router.push(getDashboardPathByRole(finalRole));
       router.refresh();
     } catch (err) {
       const message =
@@ -114,10 +136,14 @@ export default function SignUpPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-up-name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Full Name
             </label>
             <input
+              id="sign-up-name"
               type="text"
               required
               value={name}
@@ -128,10 +154,14 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-up-email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <input
+              id="sign-up-email"
               type="email"
               required
               value={email}
@@ -142,24 +172,32 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-up-password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
+              id="sign-up-password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
+              placeholder="Min 8 chars, 1 uppercase, 1 lowercase"
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-up-role"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Account Role
             </label>
             <select
+              id="sign-up-role"
               value={role}
               onChange={(e) => setRole(e.target.value as SignupRole)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -170,10 +208,14 @@ export default function SignUpPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-up-image"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Profile Image (Optional)
             </label>
             <input
+              id="sign-up-image"
               type="file"
               accept="image/*"
               onChange={(e) => setImageFile(e.target.files?.[0] || null)}

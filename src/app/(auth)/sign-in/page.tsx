@@ -33,6 +33,7 @@ export default function SignInPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email: email.trim() }),
         }
       );
@@ -48,7 +49,17 @@ export default function SignInPage() {
       }
 
       toast.success("Signed in successfully!");
-      router.push(getDashboardPathByRole(resolvedRole));
+
+      // Support "/sign-in?redirect=/services/<id>" used by ServiceCard.
+      const redirectParam = new URLSearchParams(window.location.search).get(
+        "redirect"
+      );
+      const destination =
+        redirectParam && redirectParam.startsWith("/")
+          ? redirectParam
+          : getDashboardPathByRole(resolvedRole);
+
+      router.push(destination);
       router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign in failed";
@@ -85,10 +96,14 @@ export default function SignInPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-in-email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <input
+              id="sign-in-email"
               type="email"
               required
               value={email}
@@ -99,10 +114,14 @@ export default function SignInPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="sign-in-password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
+              id="sign-in-password"
               type="password"
               required
               value={password}

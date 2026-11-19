@@ -4,7 +4,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, Sparkles, UserCheck } from "lucide-react";
 import { ServiceItem } from "@/types";
-import { useSession } from "@/lib/auth-client";
 
 interface ServiceCardProps {
   service: ServiceItem;
@@ -12,13 +11,10 @@ interface ServiceCardProps {
 
 export default function ServiceCard({ service }: ServiceCardProps) {
   const router = useRouter();
-  const { data: session } = useSession();
 
+  // GET /api/services/:id is a public endpoint, so browsing details does not
+  // require an account (only booking would).
   const handleViewDetails = () => {
-    if (!session?.user) {
-      router.push(`/sign-in?redirect=/services/${service._id}`);
-      return;
-    }
     router.push(`/services/${service._id}`);
   };
 
