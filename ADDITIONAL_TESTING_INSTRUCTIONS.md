@@ -66,3 +66,21 @@ CLIENT_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 BETTER_AUTH_URL=http://localhost:3000
 ```
+
+## Role-based access matrix
+
+| Feature / Access                 | Customer   | Vendor               | Admin        |
+|----------------------------------|------------|----------------------|--------------|
+| Browse & search services         | Yes        | Yes (Public view)    | Yes          |
+| Create, edit & delete services   | No         | Yes (Own services)   | Yes (Any)    |
+| Submit booking requests          | Yes        | No                   | No           |
+| Cancel pending bookings          | Yes (Own)  | No                   | No           |
+| Accept / Reject booking requests | No         | Yes (Own services)   | No           |
+| Manage subscription plans        | No         | Yes                  | No           |
+| Block / Verify users             | No         | No                   | Yes          |
+| View platform transactions       | No         | No (Own only)        | Yes (All)    |
+| Access role-specific dashboard   | Yes        | Yes                  | Yes          |
+
+Notes:
+- "Block / Verify users" is implemented as block/unblock + delete in the admin dashboard. Email verification is handled by Better Auth on sign-up.
+- "View platform transactions" is not yet implemented; Stripe webhook currently logs events. Tell me if you want transaction persistence and an admin transactions view added.
