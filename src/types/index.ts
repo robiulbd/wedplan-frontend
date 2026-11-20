@@ -49,6 +49,7 @@ export interface AuthUser {
   role: UserRole;
   isBlocked?: boolean;
   subscriptionPlan?: "free" | "premium";
+  subscriptionExpiresAt?: string | null;
 }
 
 export interface Booking {

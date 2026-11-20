@@ -1,11 +1,13 @@
 "use client";
 
-import { Briefcase, CalendarCheck, CheckCircle2, Clock, Heart, Search, Sparkles, Star } from "lucide-react";
+import { Briefcase, CalendarCheck, CheckCircle2, Clock, Heart, Loader2, Search, Sparkles, Star } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/apiClient";
 import AdminServices from "@/components/dashboard/AdminServices";
+import AdminUsers from "@/components/dashboard/AdminUsers";
 import CustomerBookings from "@/components/dashboard/CustomerBookings";
 import VendorBookings from "@/components/dashboard/VendorBookings";
 import VendorServices from "@/components/dashboard/VendorServices";
@@ -22,10 +24,16 @@ interface VendorStats {
 export default function DashboardOverview() {
   const params = useParams<{ role: string }>();
   const role = Array.isArray(params?.role) ? params.role[0] : params?.role;
+  const router = useRouter();
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(" ")[0] || "there";
   const [vendorStats, setVendorStats] = useState<VendorStats | null>(null);
-
+  const [vendorProfile, setVendorProfile] = useState<{
+    subscriptionPlan?: string;
+    subscriptionExpiresAt?: string | null;
+  } | null>(null);
+  const [upgrading, setUpgrading] = useState<boolean>(false);
+  const searchParams = useSearchParams();
   useEffect(() => {
     if (role !== "vendor") return;
     let isMounted = true;
@@ -64,6 +72,53 @@ export default function DashboardOverview() {
       isMounted = false;
     };
   }, [role]);
+
+  useEffect(() => {
+    if (role !== "vendor") return;
+    let isMounted = true;
+    apiRequest<{
+      success: boolean;
+      data: { subscriptionPlan?: string; subscriptionExpiresAt?: string | null };
+    }>("/auth/me")
+      .then((res) => {
+        if (isMounted) setVendorProfile(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (role !== "vendor") return;
+    if (searchParams.get("subscription") !== "success") return;
+    toast.success("Premium subscription activated!");
+    router.replace("/dashboard/vendor/overview");
+  }, [role, searchParams, router]);
+
+  const handleUpgrade = async () => {
+    setUpgrading(true);
+    try {
+      const res = await apiRequest<{ sessionId: string; url: string }>(
+        "/stripe/create-subscription-session",
+        {
+          method: "POST",
+          body: JSON.stringify({ priceInCents: 2900 }),
+        },
+      );
+      if (res.url) {
+        window.location.href = res.url;
+        return;
+      }
+      toast.error("Failed to start checkout");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to start checkout",
+      );
+    } finally {
+      setUpgrading(false);
+    }
+  };
 
   if (role === "vendor") {
     return (
@@ -126,6 +181,54 @@ export default function DashboardOverview() {
           </div>
         ) : null}
 
+        <div className="rounded-2xl border border-rose-100 bg-white p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Subscription Plan
+              </h2>
+              <p className="text-sm text-gray-500">
+                Free plan: up to 3 active services. Premium: unlimited listings.
+              </p>
+            </div>
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-medium capitalize ${
+                vendorProfile?.subscriptionPlan === "premium"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              }`}
+            >
+              {vendorProfile?.subscriptionPlan === "premium"
+                ? "Premium"
+                : "Free"}
+            </span>
+          </div>
+
+          {vendorProfile?.subscriptionPlan === "premium" ? (
+            <p className="mt-3 text-sm text-gray-600">
+              Premium active
+              {vendorProfile.subscriptionExpiresAt
+                ? ` until ${new Date(vendorProfile.subscriptionExpiresAt).toLocaleDateString()}`
+                : ""}
+              .
+            </p>
+          ) : (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={handleUpgrade}
+                disabled={upgrading}
+                className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-60 cursor-pointer"
+              >
+                {upgrading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : null}
+                Upgrade to Premium ($29)
+              </button>
+            </div>
+          )}
+        </div>
+
         <VendorServices />
         <VendorBookings />
       </div>
@@ -142,6 +245,7 @@ export default function DashboardOverview() {
           </p>
         </header>
         <AdminServices />
+        <AdminUsers />
       </div>
     );
   }
