@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -28,9 +29,27 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Wedding Fashion": <Shirt className="w-6 h-6 text-rose-600" />,
 };
 
+const HERO_SLIDES = [
+  {
+    src: "/images/hero-wedding.jpg",
+    alt: "Beachfront wedding ceremony with pink floral arch",
+  },
+  {
+    src: "/images/hero-wedding-1.jpg",
+    alt: "Elegant wedding reception setup",
+  },
+  {
+    src: "/images/hero-wedding-2.png",
+    alt: "Romantic wedding venue decoration",
+  },
+];
+
+const SLIDE_DURATION_MS = 5000;
+
 export default function HomePage() {
   const [featuredServices, setFeaturedServices] = useState<ServiceItem[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState<boolean>(true);
+  const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,15 +79,42 @@ export default function HomePage() {
     };
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % HERO_SLIDES.length);
+    }, SLIDE_DURATION_MS);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <main className="min-h-screen bg-white">
       {/* Banner Section */}
       <section className="relative flex min-h-[560px] items-center justify-center overflow-hidden bg-rose-950 px-4 py-24 text-center text-white sm:min-h-[640px]">
-        <img
-          src="/images/hero-wedding.jpg"
-          alt="WedPlan wedding celebration"
-          className="absolute inset-0 h-full w-full object-cover object-center z-0"
-        />
+        {HERO_SLIDES.map((slide, index) => {
+          const isActive = index === activeSlide;
+          return (
+            <div
+              key={slide.src}
+              aria-hidden={!isActive}
+              className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
+                isActive ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <Image
+                src={slide.src}
+                alt={slide.alt}
+                fill
+                sizes="100vw"
+                quality={80}
+                preload={index === 0}
+                className={`object-cover object-center transition-transform duration-[6500ms] ease-out motion-reduce:transform-none motion-reduce:transition-none ${
+                  isActive ? "scale-110" : "scale-100"
+                }`}
+              />
+            </div>
+          );
+        })}
         <div
           className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/50 to-black/70"
           aria-hidden="true"
@@ -115,6 +161,26 @@ export default function HomePage() {
             </Link>
           </div>
         </motion.div>
+
+        <div
+          className="absolute inset-x-0 bottom-6 z-20 flex items-center justify-center gap-2.5"
+          aria-label="Choose a hero image"
+        >
+          {HERO_SLIDES.map((slide, index) => (
+            <button
+              key={slide.src}
+              type="button"
+              aria-label={`Show slide ${index + 1}`}
+              aria-current={index === activeSlide}
+              onClick={() => setActiveSlide(index)}
+              className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-rose-950 ${
+                index === activeSlide
+                  ? "w-8 bg-rose-400"
+                  : "w-2 bg-white/50 hover:bg-white/80"
+              }`}
+            />
+          ))}
+        </div>
       </section>
 
       {/* Dynamic Section 2: Wedding Service Categories */}
