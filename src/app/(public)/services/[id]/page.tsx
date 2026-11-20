@@ -15,6 +15,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/apiClient";
 import { useSession } from "@/lib/auth-client";
+import { PayNowButton } from "@/components/payments/PayNowButton";
 import type { ServiceItem, SingleServiceResponse } from "@/types";
 
 function ServiceDetailsContent() {
@@ -130,7 +131,6 @@ function ServiceDetailsContent() {
 
   const isCustomerBookingCandidate =
     !!session?.user &&
-    !!service &&
     (session.user as { role?: string }).role === "customer" &&
     session.user.id !== service.vendorId;
 
@@ -146,7 +146,6 @@ function ServiceDetailsContent() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Gallery */}
           <div className="lg:col-span-3">
             <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white">
               <img
@@ -189,7 +188,6 @@ function ServiceDetailsContent() {
             </div>
           </div>
 
-          {/* Summary */}
           <aside className="lg:col-span-2">
             <div className="rounded-2xl border border-rose-100 bg-white p-6 lg:sticky lg:top-24">
               <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">
@@ -288,6 +286,23 @@ function ServiceDetailsContent() {
                 </form>
               ) : null}
 
+              {isCustomerBookingCandidate ? (
+                <div className="mt-6 p-4 rounded-xl border border-rose-200 bg-rose-50/50">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Pay &amp; Confirm
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Pay securely with Stripe to confirm this booking.
+                  </p>
+                  <PayNowButton
+                    serviceId={service._id}
+                    price={service.price}
+                    onSuccess={(url) => window.location.replace(url)}
+                    onError={(msg) => toast.error(msg)}
+                  />
+                </div>
+              ) : null}
+
               {service.vendorEmail ? (
                 <a
                   href={`mailto:${service.vendorEmail}?subject=${encodeURIComponent(
@@ -311,8 +326,6 @@ function ServiceDetailsContent() {
   );
 }
 
-// useParams() is runtime-only, so the content must stream inside a Suspense
-// boundary (required by cacheComponents).
 export default function ServiceDetailsPage() {
   return (
     <Suspense
