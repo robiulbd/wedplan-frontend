@@ -2,6 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
+import BrandLogo from "@/components/shared/BrandLogo";
+import SocialLinks from "@/components/shared/SocialLinks";
 
 export default function Footer() {
   const currentYear = 2026;
@@ -10,9 +12,7 @@ export default function Footer() {
     <footer className="mt-20 bg-white border-t border-rose-100">
       <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
         <div>
-          <Link href="/" className="text-xl font-bold tracking-tight text-rose-600">
-            WedPlan
-          </Link>
+          <BrandLogo />
           <p className="mt-3 text-sm text-gray-600 max-w-xs leading-relaxed">
             Your trusted wedding planning platform — discover curated wedding
             services and book trusted vendors for your special day.
@@ -58,26 +58,7 @@ export default function Footer() {
           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900">
             Connect
           </h3>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-600">
-            <a
-              href="#"
-              className="rounded-full border border-rose-100 bg-rose-50 px-4 py-1.5 text-rose-700 hover:bg-rose-100 transition"
-            >
-              Facebook
-            </a>
-            <a
-              href="#"
-              className="rounded-full border border-rose-100 bg-rose-50 px-4 py-1.5 text-rose-700 hover:bg-rose-100 transition"
-            >
-              Instagram
-            </a>
-            <a
-              href="#"
-              className="rounded-full border border-rose-100 bg-rose-50 px-4 py-1.5 text-rose-700 hover:bg-rose-100 transition"
-            >
-              Twitter / X
-            </a>
-          </div>
+          <SocialLinks />
         </div>
       </div>
 

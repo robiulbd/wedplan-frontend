@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import { toast } from "sonner";
+import BrandLogo from "@/components/shared/BrandLogo";
 import { signOut, useSession } from "@/lib/auth-client";
 import { getDashboardPathByRole } from "@/utils/roleRedirect";
 
@@ -35,9 +36,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur border-b border-rose-100">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold tracking-tight text-rose-600">
-          WedPlan
-        </Link>
+        <BrandLogo />
 
         <nav className="flex items-center gap-6 text-sm font-medium text-gray-700">
           <Link href="/" className="hover:text-rose-600 transition">
