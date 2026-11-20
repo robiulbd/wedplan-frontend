@@ -45,6 +45,15 @@ export default function AdminServices() {
     service: ServiceItem,
     status: "approved" | "rejected",
   ) => {
+    if (
+      status === "rejected" &&
+      !window.confirm(
+        `Permanently delete "${service.serviceName}" and all of its bookings? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
     setBusyId(service._id);
     try {
       await apiRequest(`/services/${service._id}`, {
