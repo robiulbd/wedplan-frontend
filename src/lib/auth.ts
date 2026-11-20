@@ -18,27 +18,96 @@ if (!authSecret) {
   );
 }
 
+// Narrowed copies so closures below don't see `string | undefined`.
+const mongoConnectionString: string = mongoUri;
+
 // Next.js hot-reloads modules in development, which would otherwise open a new
-// Mongo connection on every change. Cache the client on globalThis.
+// Mongo connection on every change. Cache the client on globalThis so serverless
+// invocations reuse it too.
 const globalForMongo = globalThis as unknown as {
   wedplanMongoClient?: MongoClient;
 };
 
-const mongoClient =
-  globalForMongo.wedplanMongoClient ?? new MongoClient(mongoUri);
-
-if (process.env.NODE_ENV !== "production") {
-  globalForMongo.wedplanMongoClient = mongoClient;
+function createMongoClient(): MongoClient {
+  const client = new MongoClient(mongoConnectionString, {
+    serverSelectionTimeoutMS: 10_000,
+  });
+  globalForMongo.wedplanMongoClient = client;
+  return client;
 }
+
+function getMongoClient(): MongoClient {
+  return globalForMongo.wedplanMongoClient ?? createMongoClient();
+}
+
+function discardMongoClient(): void {
+  const client = globalForMongo.wedplanMongoClient;
+  globalForMongo.wedplanMongoClient = undefined;
+  // A failed topology may already be closed; never let cleanup break a request.
+  if (client) void client.close().catch(() => undefined);
+}
+
+function isDeadClientError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "MongoTopologyClosedError" ||
+    /topology is closed|must be connected/i.test(error.message)
+  );
+}
+
+type MongoAdapterFactory = ReturnType<typeof mongodbAdapter>;
+type MongoAdapter = ReturnType<MongoAdapterFactory>;
+type AdapterOptions = Parameters<MongoAdapterFactory>[0];
+
+const baseAdapterFactory = mongodbAdapter(getMongoClient().db(), {
+  client: getMongoClient(),
+  // Standalone MongoDB servers don't support multi-document transactions.
+  transaction: false,
+});
+
+// A transient Atlas network failure can permanently close the cached driver
+// topology ("MongoTopologyClosedError"). Retry the failed adapter call once
+// with a brand-new client so sign-up/sign-in recover without a redeploy.
+const resilientAdapterFactory = (options: AdapterOptions): MongoAdapter => {
+  const adapter = baseAdapterFactory(options);
+
+  return new Proxy(adapter, {
+    get(target, prop, receiver) {
+      const value = Reflect.get(target, prop, target);
+      if (typeof prop !== "string" || typeof value !== "function") {
+        return value;
+      }
+
+      const method = value as (...args: unknown[]) => unknown;
+      return async (...args: unknown[]) => {
+        try {
+          return await method.apply(target, args);
+        } catch (error) {
+          if (!isDeadClientError(error)) throw error;
+
+          discardMongoClient();
+          const freshClient = getMongoClient();
+          const freshAdapter = mongodbAdapter(freshClient.db(), {
+            client: freshClient,
+            transaction: false,
+          })(options);
+          const freshMethod = Reflect.get(freshAdapter, prop, freshAdapter);
+          if (typeof freshMethod !== "function") throw error;
+
+          return await (freshMethod as (...args: unknown[]) => unknown).apply(
+            freshAdapter,
+            args,
+          );
+        }
+      };
+    },
+  }) as MongoAdapter;
+};
 
 export const auth = betterAuth({
   // better-auth writes to the same `user` collection the Express backend reads,
   // so roles set by POST /api/auth/jwt are visible to both sides.
-  database: mongodbAdapter(mongoClient.db(), {
-    client: mongoClient,
-    // Standalone MongoDB servers don't support multi-document transactions.
-    transaction: false,
-  }),
+  database: resilientAdapterFactory,
   secret: authSecret,
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   emailAndPassword: {
