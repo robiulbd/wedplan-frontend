@@ -114,9 +114,14 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setLoading(true);
     try {
+      // Remember the selected role across the OAuth round-trip; AuthSync sends
+      // it to POST /api/auth/jwt so Google vendor sign-ups keep their role.
+      localStorage.setItem("wedplan_pending_role", role);
       await signIn.social({
         provider: "google",
-        callbackURL: "/dashboard/customer/overview",
+        // Land on the dashboard for the chosen role. DashboardShell still
+        // corrects the path if the backend resolves a different role.
+        callbackURL: getDashboardPathByRole(role),
       });
     } catch (err) {
       const message =

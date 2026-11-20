@@ -15,7 +15,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { apiRequest } from "@/lib/apiClient";
+import { apiRequest, ensureBackendJwt } from "@/lib/apiClient";
 import { signOut, useSession } from "@/lib/auth-client";
 import type { AuthUser } from "@/types";
 import { getDashboardPathByRole } from "@/utils/roleRedirect";
@@ -81,6 +81,11 @@ export default function DashboardShell({
 
     async function loadProfile() {
       try {
+        // Google OAuth sessions arrive without the Express JWT — mint it first
+        // so /auth/me (and the dashboard's other API calls) are authorized.
+        if (session?.user?.email) {
+          await ensureBackendJwt(session.user.email);
+        }
         const res = await apiRequest<MeResponse>("/auth/me");
         if (isMounted) {
           setProfileFromApi(res.data);
@@ -98,7 +103,7 @@ export default function DashboardShell({
     return () => {
       isMounted = false;
     };
-  }, [userId]);
+  }, [userId, session?.user?.email]);
 
   // 3. Keep users inside their own dashboard. Only trust the role from the
   // backend: redirecting on the session fallback would bounce everyone through

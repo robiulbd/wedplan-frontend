@@ -46,11 +46,15 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     maxPasswordLength: 128,
   },
-  // Google OAuth provider — credentials are read from env:
-  //   GOOGLE_CLIENT_ID  and  GOOGLE_CLIENT_SECRET (already in backend .env)
-  google: {
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  // Google OAuth provider. better-auth requires social providers to be nested
+  // under `socialProviders` (a top-level `google` key is silently ignored and
+  // results in "Provider not found" on POST /api/auth/sign-in/social).
+  // Credentials live in the FRONTEND .env because this file runs in Next.js.
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    },
   },
   user: {
     additionalFields: {

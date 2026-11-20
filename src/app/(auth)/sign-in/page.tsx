@@ -74,9 +74,20 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      // Honour "/sign-in?redirect=/services/<id>" from ServiceCard, otherwise
+      // fall back to the customer dashboard (DashboardShell redirects vendors
+      // and admins to their own dashboard once the role loads).
+      const redirectParam = new URLSearchParams(window.location.search).get(
+        "redirect"
+      );
+      const callbackURL =
+        redirectParam && redirectParam.startsWith("/")
+          ? redirectParam
+          : "/dashboard/customer/overview";
+
       await signIn.social({
         provider: "google",
-        callbackURL: "/dashboard/customer/overview",
+        callbackURL,
       });
     } catch (err) {
       const message =
