@@ -9,6 +9,13 @@ import BrandLogo from "@/components/shared/BrandLogo";
 import { signOut, useSession } from "@/lib/auth-client";
 import { getDashboardPathByRole } from "@/utils/roleRedirect";
 
+const NAV_LINK_CLASS = [
+  "relative py-1 text-sm font-medium text-gray-700 transition-colors duration-200 hover:text-rose-600",
+  "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full",
+  "after:bg-rose-600 after:origin-left after:scale-x-0 after:transition-transform after:duration-200",
+  "hover:after:scale-x-100",
+].join(" ");
+
 export default function Navbar() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
@@ -34,31 +41,31 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur border-b border-rose-100">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-rose-100/80 bg-white/90 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
         <BrandLogo />
 
-        <nav className="flex items-center gap-6 text-sm font-medium text-gray-700">
-          <Link href="/" className="hover:text-rose-600 transition">
+        <nav className="flex items-center gap-7 text-sm font-medium text-gray-700 lg:gap-9">
+          <Link href="/" className={NAV_LINK_CLASS}>
             Home
           </Link>
-          <Link href="/services" className="hover:text-rose-600 transition">
+          <Link href="/services" className={NAV_LINK_CLASS}>
             Browse Services
           </Link>
 
           {isPending ? (
             <div className="h-8 w-20 rounded-md bg-gray-100 animate-pulse" />
           ) : !user ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/sign-in"
-                className="px-3.5 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+                className="rounded-lg px-4 py-2 text-gray-700 transition-colors duration-200 hover:border hover:border-rose-100 hover:bg-rose-50 hover:text-rose-700"
               >
                 Sign In
               </Link>
               <Link
                 href="/sign-up"
-                className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
+                className="rounded-lg bg-rose-600 px-4 py-2 font-medium text-white shadow-sm shadow-rose-600/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-md hover:shadow-rose-600/30"
               >
                 Sign Up
               </Link>

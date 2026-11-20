@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
+  ArrowRight,
   Camera,
   Building2,
   Flower2,
@@ -62,14 +63,18 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Banner Section */}
-      <section className="relative min-h-[520px] sm:min-h-[580px] flex items-center justify-center bg-rose-950 px-4 py-20 text-center text-white overflow-hidden">
+      <section className="relative flex min-h-[560px] items-center justify-center overflow-hidden bg-rose-950 px-4 py-24 text-center text-white sm:min-h-[640px]">
         <img
           src="/images/hero-wedding.jpg"
           alt="WedPlan wedding celebration"
           className="absolute inset-0 h-full w-full object-cover object-center z-0"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/55 to-black/70 z-10"
+          className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/50 to-black/70"
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,0.25)_100%)]"
           aria-hidden="true"
         />
 
@@ -77,32 +82,34 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55 }}
-          className="relative z-20 max-w-4xl mx-auto"
+          className="relative z-20 mx-auto max-w-4xl"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-white/15 border border-white/25 text-rose-100 mb-5">
-            WedPlan • Wedding Planning Platform
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/35 bg-white/10 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-rose-50 shadow-sm backdrop-blur-md sm:text-xs">
+            <Sparkles className="h-3.5 w-3.5 text-rose-200" />
+            WedPlan · Wedding Planning Platform
           </span>
 
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight">
+          <h1 className="text-balance text-4xl font-bold leading-[1.1] tracking-tight text-white drop-shadow-lg sm:text-5xl md:text-6xl lg:text-7xl">
             Plan Your Dream Wedding with Trusted Vendors
           </h1>
 
-          <p className="mt-5 text-base sm:text-lg text-gray-100 max-w-2xl mx-auto leading-relaxed">
+          <p className="mx-auto mt-6 max-w-2xl text-balance text-base leading-relaxed text-white/90 drop-shadow sm:text-lg lg:text-xl">
             Discover curated wedding venues, photography, catering, floral
             decor, and bridal styling—or join as a vendor to showcase your
             services effortlessly.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/services"
-              className="px-6 py-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm sm:text-base font-medium shadow-md transition"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-rose-950/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-xl hover:shadow-rose-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-rose-950 sm:text-base"
             >
               Explore Wedding Services
+              <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/sign-up"
-              className="px-6 py-3 rounded-lg bg-white/15 hover:bg-white/25 border border-white/35 text-white text-sm sm:text-base font-medium transition"
+              className="inline-flex items-center justify-center rounded-xl border border-white/40 bg-white/15 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-black/10 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-white/60 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-rose-950 sm:text-base"
             >
               Get Started Today
             </Link>
