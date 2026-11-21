@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   Clock,
   HeartHandshake,
+  LayoutGrid,
+  CalendarCheck,
 } from "lucide-react";
 import { SERVICE_CATEGORIES, ServiceItem, ServicesListResponse } from "@/types";
 import { apiRequest } from "@/lib/apiClient";
@@ -43,6 +45,12 @@ const HERO_SLIDES = [
     alt: "Romantic wedding venue decoration",
   },
 ];
+
+const HERO_HIGHLIGHTS = [
+  { stat: "6+", label: "Curated Categories", icon: LayoutGrid },
+  { stat: "100%", label: "Vetted Listings", icon: ShieldCheck },
+  { stat: "Direct", label: "Booking Tracking", icon: CalendarCheck },
+] as const;
 
 const SLIDE_DURATION_MS = 5000;
 
@@ -90,7 +98,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Banner Section */}
-      <section className="relative flex min-h-[560px] items-center justify-center overflow-hidden bg-rose-950 px-4 py-24 text-center text-white sm:min-h-[640px]">
+      <section className="relative flex min-h-[620px] items-center justify-center overflow-hidden bg-rose-950 px-4 py-24 text-center text-white sm:min-h-[700px]">
         {HERO_SLIDES.map((slide, index) => {
           const isActive = index === activeSlide;
           return (
@@ -159,6 +167,27 @@ export default function HomePage() {
             >
               Get Started Today
             </Link>
+          </div>
+
+          <div className="mx-auto mt-10 grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
+            {HERO_HIGHLIGHTS.map(({ stat, label, icon: Icon }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 rounded-2xl border border-white/25 bg-white/10 px-4 py-3 text-left backdrop-blur-md"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/20 text-rose-100">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span>
+                  <span className="block text-lg font-semibold leading-tight text-white drop-shadow">
+                    {stat}
+                  </span>
+                  <span className="block text-[11px] font-medium uppercase tracking-wider text-white/75">
+                    {label}
+                  </span>
+                </span>
+              </div>
+            ))}
           </div>
         </motion.div>
 
