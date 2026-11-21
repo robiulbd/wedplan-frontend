@@ -10,7 +10,7 @@ import { signOut, useSession } from "@/lib/auth-client";
 import { getDashboardPathByRole } from "@/utils/roleRedirect";
 
 const NAV_LINK_CLASS = [
-  "relative py-1 text-[13px] font-medium text-gray-700 transition-colors duration-200 hover:text-rose-600",
+  "relative py-1 text-[15px] font-medium text-gray-700 transition-colors duration-200 hover:text-rose-600",
   "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full",
   "after:bg-rose-600 after:origin-left after:scale-x-0 after:transition-transform after:duration-200",
   "hover:after:scale-x-100",
@@ -47,7 +47,7 @@ export default function Navbar() {
           <BrandLogo />
         </div>
 
-        <nav className="flex items-center gap-5 text-[15px] font-medium text-gray-700 lg:gap-8 lg:text-[16px]">
+        <nav className="flex items-center gap-5 text-[16px] font-medium text-gray-700 lg:gap-8 lg:text-[18px]">
           <Link href="/" className={NAV_LINK_CLASS}>
             Home
           </Link>
