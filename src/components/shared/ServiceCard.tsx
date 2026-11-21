@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { MapPin, Sparkles, UserCheck } from "lucide-react";
@@ -17,6 +18,14 @@ export default function ServiceCard({ service }: ServiceCardProps) {
   // Unauthenticated users are sent to Sign In before they can view details
   // (only customers may book, and booking requires an account).
   const handleViewDetails = () => {
+    // Hand the selected card to the detail page so its shared `layoutId`
+    // image can render immediately and animate out of this card.
+    try {
+      sessionStorage.setItem("wedplan_selected_service", JSON.stringify(service));
+    } catch {
+      // sessionStorage may be unavailable (private mode); navigation still works.
+    }
+
     if (!isPending && !session?.user) {
       router.push(
         `/sign-in?redirect=${encodeURIComponent(`/services/${service._id}`)}`,
@@ -32,25 +41,38 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       : "/images/hero-wedding.jpg";
 
   return (
-    <article className="group bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col">
+    <motion.article
+      layout
+      className="group bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-xs hover:shadow-md transition flex flex-col"
+    >
       <div className="relative h-48 w-full overflow-hidden bg-rose-50">
-        <img
+        <motion.img
+          layout
+          layoutId={`service-image-${service._id}`}
           src={coverImage}
           alt={service.serviceName}
           className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
         />
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 text-rose-700 shadow-xs">
+        <motion.span
+          layout
+          layoutId={`service-category-${service._id}`}
+          className="absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-white/95 text-rose-700 shadow-xs"
+        >
           <Sparkles className="w-3 h-3" />
           {service.category}
-        </span>
+        </motion.span>
       </div>
 
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">
+            <motion.h3
+              layout
+              layoutId={`service-title-${service._id}`}
+              className="text-lg font-semibold text-gray-900 line-clamp-1"
+            >
               {service.serviceName}
-            </h3>
+            </motion.h3>
             <span className="text-base font-bold text-rose-600 shrink-0">
               ${service.price.toLocaleString()}
             </span>
@@ -70,14 +92,16 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           </div>
         </div>
 
-        <button
+        <motion.button
+          layout
+          layoutId={`service-action-${service._id}`}
           type="button"
           onClick={handleViewDetails}
           className="mt-5 w-full py-2.5 px-4 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition cursor-pointer"
         >
           View Details
-        </button>
+        </motion.button>
       </div>
-    </article>
+    </motion.article>
   );
 }

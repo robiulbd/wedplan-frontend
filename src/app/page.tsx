@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Camera,
@@ -58,6 +58,7 @@ export default function HomePage() {
   const [featuredServices, setFeaturedServices] = useState<ServiceItem[]>([]);
   const [loadingFeatured, setLoadingFeatured] = useState<boolean>(true);
   const [activeSlide, setActiveSlide] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     let isMounted = true;
@@ -99,30 +100,35 @@ export default function HomePage() {
     <main className="min-h-screen bg-white">
       {/* Banner Section */}
       <section className="relative flex min-h-[620px] items-center justify-center overflow-hidden bg-rose-950 px-4 py-24 text-center text-white sm:min-h-[700px]">
-        {HERO_SLIDES.map((slide, index) => {
-          const isActive = index === activeSlide;
-          return (
-            <div
-              key={slide.src}
-              aria-hidden={!isActive}
-              className={`absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
-                isActive ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <Image
-                src={slide.src}
-                alt={slide.alt}
-                fill
-                sizes="100vw"
-                quality={80}
-                preload={index === 0}
-                className={`object-cover object-center transition-transform duration-[6500ms] ease-out motion-reduce:transform-none motion-reduce:transition-none ${
-                  isActive ? "scale-110" : "scale-100"
-                }`}
-              />
-            </div>
-          );
-        })}
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={HERO_SLIDES[activeSlide].src}
+            className="absolute inset-0 z-0"
+            initial={{
+              opacity: 0,
+              scale: prefersReducedMotion ? 1 : 1.04,
+            }}
+            animate={{
+              opacity: 1,
+              scale: prefersReducedMotion ? 1 : [1.02, 1.12],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: prefersReducedMotion ? 0 : 1.1, ease: "easeInOut" },
+              scale: { duration: prefersReducedMotion ? 0 : 6.5, ease: "easeOut" },
+            }}
+          >
+            <Image
+              src={HERO_SLIDES[activeSlide].src}
+              alt={HERO_SLIDES[activeSlide].alt}
+              fill
+              sizes="100vw"
+              quality={80}
+              preload={activeSlide === 0}
+              className="object-cover object-center"
+            />
+          </motion.div>
+        </AnimatePresence>
         <div
           className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/50 to-black/70"
           aria-hidden="true"

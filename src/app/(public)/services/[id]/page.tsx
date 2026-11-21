@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiRequest } from "@/lib/apiClient";
@@ -31,6 +32,23 @@ function ServiceDetailsContent() {
   const [eventLocation, setEventLocation] = useState<string>("");
   const [bookingMessage, setBookingMessage] = useState<string>("");
   const [submittingBooking, setSubmittingBooking] = useState<boolean>(false);
+
+  // Use the card the user just clicked as instant placeholder data so the
+  // shared `layoutId` image can animate into this page before the API replies.
+  useEffect(() => {
+    if (!id || service) return;
+    try {
+      const cached = JSON.parse(
+        sessionStorage.getItem("wedplan_selected_service") || "null",
+      ) as ServiceItem | null;
+      if (cached && cached._id === id) {
+        setService(cached);
+        setLoading(false);
+      }
+    } catch {
+      // Ignore unavailable or malformed cache.
+    }
+  }, [id, service]);
 
   useEffect(() => {
     if (!id) return;
@@ -147,13 +165,15 @@ function ServiceDetailsContent() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
-            <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white">
-              <img
+            <motion.div layout className="overflow-hidden rounded-2xl border border-rose-100 bg-white">
+              <motion.img
+                layout
+                layoutId={`service-image-${service._id}`}
                 src={cover}
                 alt={service.serviceName}
                 className="h-72 sm:h-96 w-full object-cover"
               />
-            </div>
+            </motion.div>
 
             {images.length > 1 && (
               <div className="mt-3 grid grid-cols-4 gap-3">
@@ -190,14 +210,22 @@ function ServiceDetailsContent() {
 
           <aside className="lg:col-span-2">
             <div className="rounded-2xl border border-rose-100 bg-white p-6 lg:sticky lg:top-24">
-              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">
+              <motion.span
+                layout
+                layoutId={`service-category-${service._id}`}
+                className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700"
+              >
                 <Sparkles className="w-3 h-3" />
                 {service.category}
-              </span>
+              </motion.span>
 
-              <h1 className="mt-3 text-2xl font-bold text-gray-900">
+              <motion.h1
+                layout
+                layoutId={`service-title-${service._id}`}
+                className="mt-3 text-2xl font-bold text-gray-900"
+              >
                 {service.serviceName}
-              </h1>
+              </motion.h1>
 
               <p className="mt-2 text-3xl font-bold text-rose-600">
                 ${service.price.toLocaleString()}
@@ -276,13 +304,15 @@ function ServiceDetailsContent() {
                     />
                   </div>
 
-                  <button
+                  <motion.button
+                    layout
+                    layoutId={`service-action-${service._id}`}
                     type="submit"
                     disabled={submittingBooking}
                     className="w-full py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-sm font-medium transition cursor-pointer"
                   >
                     {submittingBooking ? "Sending..." : "Send booking request"}
-                  </button>
+                  </motion.button>
                 </form>
               ) : null}
 
@@ -304,7 +334,13 @@ function ServiceDetailsContent() {
               ) : null}
 
               {service.vendorEmail ? (
-                <a
+                <motion.a
+                  layout
+                  layoutId={
+                    isCustomerBookingCandidate
+                      ? undefined
+                      : `service-action-${service._id}`
+                  }
                   href={`mailto:${service.vendorEmail}?subject=${encodeURIComponent(
                     `Enquiry about ${service.serviceName}`,
                   )}`}
@@ -312,7 +348,7 @@ function ServiceDetailsContent() {
                 >
                   <Mail className="w-4 h-4" />
                   Contact vendor
-                </a>
+                </motion.a>
               ) : null}
 
               <p className="mt-4 text-xs text-gray-500">
