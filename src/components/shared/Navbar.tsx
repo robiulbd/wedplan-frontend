@@ -59,7 +59,7 @@ export default function Navbar() {
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Link
                 href="/sign-in"
-                className="rounded-lg px-3 py-1.5 text-gray-700 transition-colors duration-200 hover:border hover:border-rose-100 hover:bg-rose-50 hover:text-rose-700"
+                className="rounded-lg px-3 py-2.5 text-gray-700 transition-colors duration-200 hover:border hover:border-rose-100 hover:bg-rose-50 hover:text-rose-700"
               >
                 Sign In
               </Link>
